@@ -4,24 +4,28 @@
  */
 package com.mycompany.controldesemaforo;
 
+import java.time.LocalDate;
+
 /**
  *
  * @author Noxie-PC
  */
 public class Denuncia {
-    // Atributos 
-    private int id;
-    private String descripcion;
-    
-    private OrdenComposicion ordenAsignada; 
+   private String codD;
+    private LocalDate fechaDenuncia;
+    private String calleX;
+    private String calleY;
+    private String problema;
+    private String prioridad; 
+    private OrdenComposicion ordenAsignada;
 
-    // Constructor
-    public Denuncia(int id, String descripcion) {
-        this.id = id;
-        this.descripcion = descripcion;
-        this.ordenAsignada = null; 
+    public Denuncia(String codD, String problema, String prioridad) {
+        this.codD = codD;
+        this.problema = problema;
+        this.prioridad = prioridad;
+        this.fechaDenuncia = LocalDate.now();
+        this.ordenAsignada = null;
     }
-
 
     public void asignarOrden(OrdenComposicion orden) throws OrdenYaAsignadaException {
         if (this.ordenAsignada != null) {
@@ -30,16 +34,16 @@ public class Denuncia {
         this.ordenAsignada = orden;
     }
 
-    // Getters y Setters 
+    // Metodo necesario para el Punto 5 del Testing
+    public boolean esPrioridadValida() {
+        return "Alta".equals(prioridad) || "Media".equals(prioridad) || "Baja".equals(prioridad);
+    }
+
     public OrdenComposicion getOrdenAsignada() {
         return ordenAsignada;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
+    public String getCodD() {
+        return codD;
     }
 }

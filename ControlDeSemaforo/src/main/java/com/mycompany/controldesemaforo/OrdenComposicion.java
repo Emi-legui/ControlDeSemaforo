@@ -11,23 +11,27 @@ import java.time.LocalDate;
  * @author Noxie-PC
  */
 public class OrdenComposicion {
-    private String nroOrden;
+ private String nroOrden;
     private LocalDate fechaRepProgramada;
+    private LocalDate fechaEfectivaReparacion; // Puede ser nula hasta que se repare
     private String detalle;
 
-    // Constructor 
     public OrdenComposicion(String nroOrden, String detalle) {
         this.nroOrden = nroOrden;
         this.detalle = detalle;
         this.fechaRepProgramada = LocalDate.now();
+        this.fechaEfectivaReparacion = null; // Nula al principio como pide el punto 3
     }
 
-    // Getters y Setters
+    public void setFechaEfectivaReparacion(LocalDate fecha) {
+        this.fechaEfectivaReparacion = fecha;
+    }
+
+    public LocalDate getFechaEfectivaReparacion() {
+        return fechaEfectivaReparacion;
+    }
+
     public String getNroOrden() {
         return nroOrden;
-    }
-
-    public String getDetalle() {
-        return detalle;
     }
 }
