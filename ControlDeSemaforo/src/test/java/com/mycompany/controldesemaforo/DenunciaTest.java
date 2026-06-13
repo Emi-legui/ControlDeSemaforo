@@ -17,78 +17,100 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DenunciaTest {
     
-    public DenunciaTest() {
-    }
-    
-    @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
-    }
-    
+   // Variables de instancia globales para el entorno de pruebas (Punto 1)
+    private GestionSemaforosService service;
+    private Semaforo semaforoDefecto;
+
+    // 1. Configuracion del Entorno de Pruebas (Ciclo de Vida)
     @BeforeEach
     public void setUp() {
+        service = new GestionSemaforosService();
+        semaforoDefecto = new Semaforo(101, "Smart LED");
     }
-    
+
     @AfterEach
     public void tearDown() {
+        System.out.println("Finalizacion de una prueba individual de control de semaforos.");
     }
 
-    /**
-     * Test of asignarOrden method, of class Denuncia.
-     */
+    // 2. Prueba de Composicion Estricta (Semaforo y Luz)
     @Test
-    public void testAsignarOrden() throws Exception {
-        System.out.println("asignarOrden");
-        OrdenComposicion orden = null;
-        Denuncia instance = null;
-        instance.asignarOrden(orden);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testComposicionEstrictaSemaforoyLuz() {
+        // Verifica que la lista de luces tenga un tamano igual a 3
+        assertEquals(3, semaforoDefecto.getLuces().size());
+
+        // Verifica mediante assertSame que la referencia en la posicion 0 sea la misma
+        Luz luzPosicionCero = semaforoDefecto.getLuces().get(0);
+        assertSame(luzPosicionCero, semaforoDefecto.getLuces().get(0));
     }
 
-    /**
-     * Test of esPrioridadValida method, of class Denuncia.
-     */
+    // 3. Prueba de Robustez ante Duplicados (assertThrows y @Timeout)
     @Test
-    public void testEsPrioridadValida() {
-        System.out.println("esPrioridadValida");
-        Denuncia instance = null;
-        boolean expResult = false;
-        boolean result = instance.esPrioridadValida();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    @Timeout(value = 400, unit = TimeUnit.MILLISECONDS)
+    public void testRobustezAnteDuplicadosYTimeout() {
+        Denuncia denuncia = new Denuncia("DEN-001", "Foco rojo quemado", "Alta");
+        OrdenComposicion orden1 = new OrdenComposicion("ORD-100", "Cambio de lampara");
+        OrdenComposicion orden2 = new OrdenComposicion("ORD-200", "Revision general");
+
+        // Asignamos la primera orden de manera habitual
+        try {
+            service.asignarOrden(denuncia, orden1);
+        } catch (OrdenYaAsignadaException e) {
+            fail("No deberia lanzar excepcion con la primera orden");
+        }
+
+        // Verifica que dispare OrdenYaAsignadaException al intentar asociar una segunda orden
+        assertThrows(OrdenYaAsignadaException.class, () -> {
+            service.asignarOrden(denuncia, orden2);
+        });
     }
 
-    /**
-     * Test of getOrdenAsignada method, of class Denuncia.
-     */
+    // 4. Prueba de Flujo de Reparacion Exitoso (assertTrue y assertEquals)
     @Test
-    public void testGetOrdenAsignada() {
-        System.out.println("getOrdenAsignada");
-        Denuncia instance = null;
-        OrdenComposicion expResult = null;
-        OrdenComposicion result = instance.getOrdenAsignada();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testFlujoReparacionExitoso() {
+        EquipoControl equipo = new EquipoControl("EQ-07", "Mantenimiento LED");
+        
+        // El responsable finaliza la reparacion (cambia estado y libera miembros)
+        equipo.finalizarReparacion();
+
+        // Comprobar que el estado del equipo cambio a "Libre"
+        assertEquals("Libre", equipo.getEstado());
+
+        // Recorrer la lista de los 4 miembros y validar que isLibre() sea verdadero
+        assertEquals(4, equipo.getMiembros().size());
+        for (Miembro miembro : equipo.getMiembros()) {
+            assertTrue(miembro.isLibre());
+        }
     }
 
-    /**
-     * Test of getCodD method, of class Denuncia.
-     */
+    // 5. Prueba Parametrizada de Prioridades (@ParameterizedTest)
+    @ParameterizedTest
+    @ValueSource(strings = {"Alta", "Media", "Baja"})
+    public void testPrioridadesValidas(String prioridadValida) {
+        // Instancia una denuncia para cada prioridad del ValueSource
+        Denuncia d = new Denuncia("DEN-TEMP", "Semaforo apagado", prioridadValida);
+        
+        // Verifica que retorne true para cada uno de los casos
+        assertTrue(d.esPrioridadValida());
+    }
+
+    // 6. Prueba de Metricas Estadisticas e Historial (assertEquals)
     @Test
-    public void testGetCodD() {
-        System.out.println("getCodD");
-        Denuncia instance = null;
-        String expResult = "";
-        String result = instance.getCodD();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testMetricasEstadisticasHistorial() {
+        // Registramos 3 denuncias diferentes asociadas al mismo semaforo
+        Denuncia d1 = new Denuncia("D1", "No cambia a verde", "Media");
+        Denuncia d2 = new Denuncia("D2", "Optica rota", "Baja");
+        Denuncia d3 = new Denuncia("D3", "Cuenta regresiva tildada", "Alta");
+
+        semaforoDefecto.agregarDenuncia(d1);
+        semaforoDefecto.agregarDenuncia(d2);
+        semaforoDefecto.agregarDenuncia(d3);
+
+        // Invocamos al metodo del servicio que calcula las estadisticas
+        int resultadoDevuelto = service.calcularEstadisticasReparacion(semaforoDefecto);
+
+        // Verificamos que el resultado sea exactamente 3
+        assertEquals(3, resultadoDevuelto);
     }
     
 }
