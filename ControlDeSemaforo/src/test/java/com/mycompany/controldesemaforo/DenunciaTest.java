@@ -4,10 +4,6 @@
  */
 package com.mycompany.controldesemaforo;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,78 +13,23 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DenunciaTest {
     
-    public DenunciaTest() {
-    }
-    
-    @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
-    }
-    
-    @BeforeEach
-    public void setUp() {
-    }
-    
-    @AfterEach
-    public void tearDown() {
-    }
+   @Test
+    public void testAsignarOrdenExcepcionSiYaTieneOrden() {
+        // 1. Escenario (Arrange): Creamos la denuncia y dos ordenes de reparacion
+        Denuncia denuncia = new Denuncia(1, "Semaforo de Av. Illia intermitente");
+        OrdenComposicion orden1 = new OrdenComposicion("ORD-001", "Revision de focos LED");
+        OrdenComposicion orden2 = new OrdenComposicion("ORD-002", "Cambio de plaqueta");
 
-    /**
-     * Test of asignarOrden method, of class Denuncia.
-     */
-    @Test
-    public void testAsignarOrden() throws Exception {
-        System.out.println("asignarOrden");
-        OrdenComposicion orden = null;
-        Denuncia instance = null;
-        instance.asignarOrden(orden);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
+        // 2. Ejecucion parcial: Asignamos la primera orden sin problemas
+        try {
+            denuncia.asignarOrden(orden1);
+        } catch (OrdenYaAsignadaException e) {
+            fail("No deberia lanzar excepcion al asignar la primera orden");
+        }
 
-    /**
-     * Test of getOrdenAsignada method, of class Denuncia.
-     */
-    @Test
-    public void testGetOrdenAsignada() {
-        System.out.println("getOrdenAsignada");
-        Denuncia instance = null;
-        OrdenComposicion expResult = null;
-        OrdenComposicion result = instance.getOrdenAsignada();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        // 3. Verificacion (Assert): Intentamos asignar una segunda orden y verificamos la excepcion
+        assertThrows(OrdenYaAsignadaException.class, () -> {
+            denuncia.asignarOrden(orden2);
+        });
     }
-
-    /**
-     * Test of getId method, of class Denuncia.
-     */
-    @Test
-    public void testGetId() {
-        System.out.println("getId");
-        Denuncia instance = null;
-        int expResult = 0;
-        int result = instance.getId();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of getDescripcion method, of class Denuncia.
-     */
-    @Test
-    public void testGetDescripcion() {
-        System.out.println("getDescripcion");
-        Denuncia instance = null;
-        String expResult = "";
-        String result = instance.getDescripcion();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-    
 }
